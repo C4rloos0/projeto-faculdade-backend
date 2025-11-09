@@ -18,6 +18,10 @@ app.use(
   })
 );
 
+app.get("/time", (req, res) => {
+  res.status(200);
+});
+
 const routes = require("./routes/rota");
 app.use("/", routes);
 
