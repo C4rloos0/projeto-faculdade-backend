@@ -168,6 +168,17 @@ const router = express.Router();
  *     responses:
  *       200:
  *         description: Campeonato atualizado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                   example: 1
+ *                 nome:
+ *                   type: string
+ *                   example: "Brasileirão"
  *       404:
  *         description: Campeonato não encontrado
  *       500:
@@ -192,6 +203,23 @@ const router = express.Router();
  *     responses:
  *       200:
  *         description: Campeonato removido com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 msg:
+ *                   type: string
+ *                   example: "Campeonato removido com sucesso."
+ *                 campeonato:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 1
+ *                     nome:
+ *                       type: string
+ *                       example: "Copa América"
  *       404:
  *         description: Campeonato não encontrado
  *       500:
@@ -247,6 +275,9 @@ router.put("/:id", async (req, res) => {
   try {
     const id = req.params.id;
     const { nome } = req.body;
+    if(!nome){
+      return res.status(400).json({msg : "Parâmetros incorretos"});
+    }
     const r = await db.query("UPDATE Campeonato SET nome = $1 WHERE id = $2 RETURNING *", [nome, id]);
     if (r.rows.length === 0) {
       return res.status(404).json({ msg: "Campeonato não encontrado para atualização." });
