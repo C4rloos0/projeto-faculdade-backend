@@ -251,7 +251,7 @@ router.get("/:id", async (req, res) => {
     if (r.rows.length > 0) {
       return res.json(r.rows[0]);
     }
-    res.status(404).json("Not found");
+    res.status(404).json({ msg: "Jogador não encontrado" });
   } catch (err) {
     res.status(500).json({ msg: err.message });
   }
@@ -260,8 +260,24 @@ router.get("/:id", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     const { nome, salario, id_time } = req.body;
+    if(!nome || !salario || !id_time){
+      return res.status(400).json({msg : "Parâmetros incorretos"});
+    }
+    const timeCheck = await db.query("SELECT id FROM Time WHERE id = $1", [id_time]);
+
+    if (timeCheck.rows.length === 0) {
+      return res.status(404).json({msg : "Time não encontrado"});
+    }
+
     const r = await db.query("INSERT INTO Jogador (nome, salario, id_time) VALUES ($1, $2, $3) RETURNING *", [nome, salario, id_time]);
-    res.status(201).json(r.rows[0]);
+    res.status(201).json(
+      {
+        id: r.rows[0].id,
+        nome: r.rows[0].nome,
+        salario: parseFloat(r.rows[0].salario),
+        id_time: r.rows[0].id_time,
+      }
+    );
   } catch (err) {
     res.status(500).json({ msg: err.message });
   }
@@ -271,6 +287,15 @@ router.put("/:id", async (req, res) => {
  try {
     const id = req.params.id;
     const { nome, salario, id_time } = req.body;
+    if(!nome || !salario || !id_time){
+      return res.status(400).json({msg : "Parâmetros incorretos"});
+    }
+    const timeCheck = await db.query("SELECT id FROM Time WHERE id = $1", [id_time]);
+
+    if (timeCheck.rows.length === 0) {
+      return res.status(404).json({msg : "Time não encontrado"});
+    }
+    
     const r = await db.query(
       "UPDATE Jogador SET nome=$1, salario=$2, id_time=$3 WHERE id=$4 RETURNING *", 
       [nome, salario, id_time, id]
@@ -293,7 +318,10 @@ router.delete("/:id", async (req, res) => {
     }
     res.status(200).json({
       msg: "Jogador removido com sucesso.",
-      jogador: r.rows[0],
+      jogador: {
+        id: r.rows[0].id,
+        nome: r.rows[0].nome,
+      }
     });
   } catch (err) {
     res.status(500).json({ msg: err.message });
